@@ -1,9 +1,15 @@
+-- Make Lua 5.1 rocks available to Neovim
+-- Make sure to install luarocks --local --version=5.1 (packages)
+package.path = package.path ..
+    ";/home/foxsae/.luarocks/share/lua/5.1/?.lua;/home/foxsae/.luarocks/share/lua/5.1/?/init.lua"
+package.cpath = package.cpath .. ";/home/foxsae/.luarocks/lib/lua/5.1/?.so"
+
 -- Leader Key
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Basic Options
-vim.o.directory = "~/.config/nvim/swap//"
+vim.o.directory = vim.fn.stdpath("state") .. "/swap//"
 vim.o.mouse = "a"
 vim.wo.number = true
 vim.wo.relativenumber = true
@@ -78,6 +84,7 @@ require('packer').startup(function(use)
   use 'kyazdani42/nvim-web-devicons'
   use 'nvim-lualine/lualine.nvim'
   use 'morhetz/gruvbox'
+  use 'echasnovski/mini.icons'
 
   -- Optional Extras
   use 'windwp/nvim-autopairs'
@@ -109,7 +116,9 @@ vim.g.neovide_fullscreen = true
 local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if ok_lsp then
   -- Lua language server
+  local capabilities = require('cmp_nvim_lsp').default_capabilities()
   lspconfig.lua_ls.setup {
+    capabilities = capabilities,
     settings = {
       Lua = {
         runtime = { version = 'LuaJIT' },
@@ -125,6 +134,7 @@ if ok_lsp then
     cmd = { "clangd", "--background-index" },
     filetypes = { "c", "cpp", "objc", "objcpp" },
     root_dir = lspconfig.util.root_pattern("compile_commands.json", ".git"),
+    capabilities = capabilities,
   }
 end
 
@@ -171,7 +181,11 @@ end
 -- Telescope Setup
 local ok_telescope, telescope = pcall(require, "telescope")
 if ok_telescope then
-  telescope.setup {}
+  telescope.setup {
+    defaults = {
+      cwd = vim.fn.getcwd(),
+    }
+  }
 end
 
 -- Autocompletion Setup
@@ -230,9 +244,13 @@ if ok_tree then
     sort_by = "case_sensitive",
     view = { width = 30, side = "left" },
     renderer = { icons = { show = { git = true, folder = true, file = true } } },
+    update_cwd = true,
+    hijack_directories = {
+      enable = true,
+      auto_open = false,
+    },
   }
 end
-vim.api.nvim_set_keymap('n', '<Leader>e', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
 
 -- Lualine Setup
 local ok_lualine, lualine = pcall(require, "lualine")
@@ -248,23 +266,32 @@ if ok_lualine then
 end
 
 -- Keymaps
-local opts = { noremap = true, silent = true }
+local opts = { silent = true }
+
+-- Nvim Tree Toggle
+vim.keymap.set('n', '<Leader>e', ':NvimTreeToggle<CR>', opts)
+
+-- Clear highlighting after search
+vim.keymap.set('n', '<Leader><space>', ':noh<CR>', opts)
 
 -- Telescope
-vim.api.nvim_set_keymap('n', '<Leader>ff', "<cmd>Telescope find_files<cr>", opts)
-vim.api.nvim_set_keymap('n', '<Leader>fg', "<cmd>Telescope live_grep<cr>", opts)
-vim.api.nvim_set_keymap('n', '<Leader>fb', "<cmd>Telescope git_branches<cr>", opts)
-vim.api.nvim_set_keymap('n', '<Leader>fc', "<cmd>Telescope git_commits<cr>", opts)
-vim.api.nvim_set_keymap('n', '<Leader>gf', "<cmd>Telescope git_files<cr>", opts)
+vim.keymap.set('n', '<Leader>ff', "<cmd>Telescope find_files<cr>", opts)
+vim.keymap.set('n', '<Leader>fg', "<cmd>Telescope live_grep<cr>", opts)
+vim.keymap.set('n', '<Leader>fb', "<cmd>Telescope git_branches<cr>", opts)
+vim.keymap.set('n', '<Leader>fc', "<cmd>Telescope git_commits<cr>", opts)
+vim.keymap.set('n', '<Leader>gf', "<cmd>Telescope git_files<cr>", opts)
+
+-- Ensure fugitive is loaded
+vim.cmd [[packadd vim-fugitive]]
 
 -- Git
-vim.api.nvim_set_keymap('n', '<Leader>gs', ':Gstatus<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gc', ':Gcommit<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gp', ':Gpush<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gl', ':Glog<CR>', opts)
+vim.keymap.set('n', '<Leader>gs', ':G<CR>', opts)
+vim.keymap.set('n', '<Leader>gc', ':Git commit<CR>', opts)
+vim.keymap.set('n', '<Leader>gp', ':Git push<CR>', opts)
+vim.keymap.set('n', '<Leader>gl', ':Git log<CR>', opts)
 
 -- C++
-vim.api.nvim_set_keymap('n', '<Leader>rc', ":w<CR>:!g++ % -o %:r && ./%:r<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', '<Leader>rc', ":w<CR>:!g++ % -o %:r && ./%:r<CR>", opts)
 
 -- Lua
-vim.api.nvim_set_keymap('n', '<Leader>rl', ":w<CR>:!lua %<CR>", { noremap = true, silent = true })
+vim.keymap.set('n', '<Leader>rl', ":w<CR>:!lua %<CR>", opts)
