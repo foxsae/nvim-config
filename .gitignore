@@ -1,0 +1,12 @@
+
+# Neovim swap/undo/backup files
+*.swp
+*.swo
+*.un~
+*.bak
+*.tmp
+*.orig
+
+# Optional plugin manager directories (if using packer)
+packer_compiled.lua
+site/
