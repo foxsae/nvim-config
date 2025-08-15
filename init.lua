@@ -7,6 +7,7 @@ vim.o.directory = "~/.config/nvim/swap//"
 vim.o.mouse = "a"
 vim.wo.number = true
 vim.wo.relativenumber = true
+vim.o.cursorline = true
 vim.o.termguicolors = true
 vim.o.hlsearch = true
 vim.o.incsearch = true
@@ -81,6 +82,19 @@ require('packer').startup(function(use)
   -- Optional Extras
   use 'windwp/nvim-autopairs'
   use 'akinsho/toggleterm.nvim'
+
+  -- GruvBox Material Soft
+  use {
+    "sainnhe/gruvbox-material",
+    config = function()
+      -- Set the colorscheme and contrast here
+      vim.g.gruvbox_material_background = 'soft' -- options: 'hard', 'medium', 'soft'
+      vim.g.gruvbox_material_foreground = 'mix'  -- 'original', 'mix', 'material'
+      vim.g.gruvbox_material_better_performance = 1
+
+      vim.cmd('colorscheme gruvbox-material')
+    end
+  }
 end)
 
 -- Neovide Settings
@@ -225,7 +239,7 @@ local ok_lualine, lualine = pcall(require, "lualine")
 if ok_lualine then
   lualine.setup {
     options = {
-      theme = 'gruvbox',
+      theme = 'gruvbox-material',
       section_separators = { '', '' },
       component_separators = { '', '' },
       icons_enabled = true,

@@ -10,3 +10,9 @@
 # Optional plugin manager directories (if using packer)
 packer_compiled.lua
 site/
+
+swap/
+*.swp
+*.swo
+
+plugin/
