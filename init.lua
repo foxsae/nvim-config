@@ -69,7 +69,21 @@ require('packer').startup(function(use)
   use 'rafamadriz/friendly-snippets'
 
   -- Treesitter
-  use { 'nvim-treesitter/nvim-treesitter', run = ':TSUpdate' }
+  use {
+    'nvim-treesitter/nvim-treesitter',
+    run = ':TSUpdate',
+    config = function()
+      require 'nvim-treesitter.configs'.setup {
+        ensure_installed = { "c", "cpp", "lua" }, -- add any languages you need
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
+        indent = { enable = true },
+        incremental_selection = { enable = true },
+      }
+    end
+  }
 
   -- Telescope
   use { 'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim' } }
@@ -117,50 +131,49 @@ require('packer').startup(function(use)
   }
 
   use 'theHamsta/nvim-dap-virtual-text'
+  -- Start Section for ToggleTerm Overseer CMake-Tools
 
+  -- Toggleterm
   use {
-    'akinsho/toggleterm.nvim',
+    "akinsho/toggleterm.nvim",
+    tag = '*',
     config = function()
-      local ok, toggleterm = pcall(require, "toggleterm")
-      if ok and toggleterm.setup then
-        toggleterm.setup {
-          size = 20,
-          open_mapping = [[<c-\>]],
-          direction = "horizontal",
-          shade_terminals = true,
-          start_in_insert = true,
-        }
-      end
-    end
-  }
-
-  use {
-    'stevearc/overseer.nvim',
-    config = function()
-      local ok, overseer = pcall(require, "overseer")
-      if ok and overseer.setup then
-        overseer.setup {
-          strategy = "toggleterm",
-          task_list = { direction = "right" },
-        }
-      end
-    end
-  }
-
-  use {
-    'Civitasv/cmake-tools.nvim',
-    requires = { 'nvim-lua/plenary.nvim' },
-    config = function()
-      require("cmake-tools").setup {
-        cmake_build_directory = "build",
-        cmake_command = "cmake",
-        save_before_build = true,
-        configure_args = { "-DCMAKE_EXPORT_COMPILE_COMMANDS=1" },
-        quickfix = true,
+      require("toggleterm").setup {
+        size = 20,
+        open_mapping = [[<c-\>]],
+        direction = "float",
+        close_on_exit = true,
+        start_in_insert = true,
+        float_opts = {
+          border = "curved",
+          winblend = 0,
+          highlights = { border = "Normal", background = "Normal" },
+        },
       }
     end
   }
+
+  -- Overseer
+  use {
+    "stevearc/overseer.nvim",
+    config = function()
+      require("overseer").setup()
+    end
+  }
 end)
+
+-- Helper function to run a command in a new floating terminal
+local Terminal = require('toggleterm.terminal').Terminal
+local function run_in_float(cmd)
+  local float_term = Terminal:new({
+    cmd = cmd,
+    direction = "float",
+    close_on_exit = false,
+    hidden = false,
+    start_in_insert = true,
+  })
+  float_term:toggle()
+end
 
 -- Neovide Settings
 vim.o.guifont = "Fira Code:h15"
@@ -356,12 +369,24 @@ vim.keymap.set('n', '<Leader>gc', ':Git commit<CR>', opts)
 vim.keymap.set('n', '<Leader>gp', ':Git push<CR>', opts)
 vim.keymap.set('n', '<Leader>gl', ':Git log<CR>', opts)
 
--- Lua
+-- Run Lua File
 vim.keymap.set('n', '<Leader>rl', ":w<CR>:!lua %<CR>", opts)
 
--- Configure project (runs cmake configure)
-vim.api.nvim_set_keymap('n', '<leader>cc', '<cmd>CMakeConfigure<CR>', opts)
--- Build project (uses CMake to invoke g++)
-vim.api.nvim_set_keymap('n', '<leader>cb', '<cmd>CMakeBuild<CR>', opts )
--- Run target executable
-vim.api.nvim_set_keymap('n', '<leader>cr', '<cmd>CMakeRun<CR>', opts )
+-- Configure
+vim.keymap.set('n', '<Leader>cc', function()
+  run_in_float(
+    "cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && ln -sf build/compile_commands.json compile_commands.json")
+end, opts)
+
+-- Build
+vim.keymap.set('n', '<Leader>cb', function() run_in_float("cmake --build build -j$(nproc)") end, opts) -- Build
+
+-- Clean
+vim.keymap.set('n', '<Leader>cl', function() run_in_float("rm -rf build out compile_commands.json") end, opts)
+
+-- Run
+vim.keymap.set('n', '<Leader>cr', function()
+  local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+  local exe_path = string.format("./build/%s", project_name)
+  run_in_float(exe_path)
+end, opts)
