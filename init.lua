@@ -176,11 +176,25 @@ local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if ok_lsp then
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
+  -- C++
   lspconfig.clangd.setup {
     cmd = { "clangd", "--background-index" }, -- LSP only, not build
     filetypes = { "c", "cpp" },
     root_dir = lspconfig.util.root_pattern("compile_commands.json", ".git"),
     capabilities = capabilities,
+  }
+
+  -- Lua
+  lspconfig.lua_ls.setup {
+    capabilities = capabilities,
+    settings = {
+      Lua = {
+        runtime = { version = 'LuaJIT' },
+        diagnostics = { globals = { 'vim' } },
+        workspace = { library = vim.api.nvim_get_runtime_file("", true) },
+        telemetry = { enable = false },
+      }
+    }
   }
 end
 
@@ -336,9 +350,6 @@ vim.keymap.set('n', '<Leader>fb', "<cmd>Telescope git_branches<cr>", opts)
 vim.keymap.set('n', '<Leader>fc', "<cmd>Telescope git_commits<cr>", opts)
 vim.keymap.set('n', '<Leader>gf', "<cmd>Telescope git_files<cr>", opts)
 
--- Ensure fugitive is loaded
---vim.cmd [[packadd vim-fugitive]]
-
 -- Git
 vim.keymap.set('n', '<Leader>gs', ':G<CR>', opts)
 vim.keymap.set('n', '<Leader>gc', ':Git commit<CR>', opts)
@@ -348,10 +359,9 @@ vim.keymap.set('n', '<Leader>gl', ':Git log<CR>', opts)
 -- Lua
 vim.keymap.set('n', '<Leader>rl', ":w<CR>:!lua %<CR>", opts)
 
--- CMake
 -- Configure project (runs cmake configure)
-vim.api.nvim_set_keymap('n', '<leader>cc', '<cmd>CMakeConfigure<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>cc', '<cmd>CMakeConfigure<CR>', opts)
 -- Build project (uses CMake to invoke g++)
-vim.api.nvim_set_keymap('n', '<leader>cb', '<cmd>CMakeBuild<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>cb', '<cmd>CMakeBuild<CR>', opts )
 -- Run target executable
-vim.api.nvim_set_keymap('n', '<leader>cr', '<cmd>CMakeRun<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>cr', '<cmd>CMakeRun<CR>', opts )
