@@ -81,6 +81,12 @@ require('packer').startup(function(use)
         },
         indent = { enable = true },
         incremental_selection = { enable = true },
+
+        -- adding these to avoid warnings
+        modules = {},
+        sync_install = false,
+        ignore_install = {},
+        auto_install = false,
       }
     end
   }
@@ -138,6 +144,7 @@ require('packer').startup(function(use)
     "akinsho/toggleterm.nvim",
     tag = '*',
     config = function()
+      ---@diagnostic disable-next-line: undefined-field
       require("toggleterm").setup {
         size = 20,
         open_mapping = [[<c-\>]],
@@ -157,6 +164,7 @@ require('packer').startup(function(use)
   use {
     "stevearc/overseer.nvim",
     config = function()
+      ---@diagnostic disable-next-line: undefined-field
       require("overseer").setup()
     end
   }
@@ -379,7 +387,7 @@ vim.keymap.set('n', '<Leader>cc', function()
 end, opts)
 
 -- Build
-vim.keymap.set('n', '<Leader>cb', function() run_in_float("cmake --build build -j$(nproc)") end, opts) -- Build
+vim.keymap.set('n', '<Leader>cb', function() run_in_float("cmake --build build -j$(nproc)") end, opts)
 
 -- Clean
 vim.keymap.set('n', '<Leader>cl', function() run_in_float("rm -rf build out compile_commands.json") end, opts)
