@@ -1,5 +1,5 @@
 -- Make Lua 5.1 rocks available to Neovim
--- Make sure to install luarocks --local --version=5.1 (packages)
+-- Make sure to install luarocks --local --version=5.1 (packages) to match current Nvim version of Lua
 package.path = package.path ..
     ";/home/foxsae/.luarocks/share/lua/5.1/?.lua;/home/foxsae/.luarocks/share/lua/5.1/?/init.lua"
 package.cpath = package.cpath .. ";/home/foxsae/.luarocks/lib/lua/5.1/?.so"
@@ -41,7 +41,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   group = group_format,
   pattern = "*.lua",
   callback = function()
-    local ok, _ = pcall(vim.lsp.buf.format, { async = false })
+    pcall(vim.lsp.buf.format, { async = false })
   end
 })
 
@@ -88,7 +88,6 @@ require('packer').startup(function(use)
 
   -- Optional Extras
   use 'windwp/nvim-autopairs'
-  use 'akinsho/toggleterm.nvim'
 
   -- GruvBox Material Soft
   use {
@@ -102,6 +101,65 @@ require('packer').startup(function(use)
       vim.cmd('colorscheme gruvbox-material')
     end
   }
+
+  -- Nvim Debugger Integrations
+  use 'mfussenegger/nvim-dap'
+
+  use {
+    'rcarriga/nvim-dap-ui',
+    requires = { 'mfussenegger/nvim-dap', 'nvim-neotest/nvim-nio' },
+    config = function()
+      local dapui_ok, dapui = pcall(require, "dapui")
+      if dapui_ok then
+        dapui.setup()
+      end
+    end
+  }
+
+  use 'theHamsta/nvim-dap-virtual-text'
+
+  use {
+    'akinsho/toggleterm.nvim',
+    config = function()
+      local ok, toggleterm = pcall(require, "toggleterm")
+      if ok and toggleterm.setup then
+        toggleterm.setup {
+          size = 20,
+          open_mapping = [[<c-\>]],
+          direction = "horizontal",
+          shade_terminals = true,
+          start_in_insert = true,
+        }
+      end
+    end
+  }
+
+  use {
+    'stevearc/overseer.nvim',
+    config = function()
+      local ok, overseer = pcall(require, "overseer")
+      if ok and overseer.setup then
+        overseer.setup {
+          strategy = "toggleterm",
+          task_list = { direction = "right" },
+        }
+      end
+    end
+  }
+
+  use {
+    'Civitasv/cmake-tools.nvim',
+    requires = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require("cmake-tools").setup {
+        cmake_build_directory = "build",
+        cmake_command = "cmake",
+        save_before_build = true,
+        configure_args = { "-DCMAKE_EXPORT_COMPILE_COMMANDS=1" },
+        quickfix = true,
+      }
+    end
+  }
 end)
 
 -- Neovide Settings
@@ -113,26 +171,14 @@ vim.g.neovide_floating_blur_amount_y = 2.0
 vim.g.neovide_fullscreen = true
 
 -- Lua LSP Setup
+
 local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if ok_lsp then
-  -- Lua language server
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
-  lspconfig.lua_ls.setup {
-    capabilities = capabilities,
-    settings = {
-      Lua = {
-        runtime = { version = 'LuaJIT' },
-        diagnostics = { globals = { 'vim' } },
-        workspace = { library = vim.api.nvim_get_runtime_file("", true) },
-        telemetry = { enable = false },
-      }
-    }
-  }
 
-  -- C/C++ language server (clangd)
   lspconfig.clangd.setup {
-    cmd = { "clangd", "--background-index" },
-    filetypes = { "c", "cpp", "objc", "objcpp" },
+    cmd = { "clangd", "--background-index" }, -- LSP only, not build
+    filetypes = { "c", "cpp" },
     root_dir = lspconfig.util.root_pattern("compile_commands.json", ".git"),
     capabilities = capabilities,
   }
@@ -265,7 +311,16 @@ if ok_lualine then
   }
 end
 
--- Keymaps
+-- Debugging Keymaps
+local keymap = vim.keymap
+keymap.set('n', '<F5>', function() require('dap').continue() end)
+keymap.set('n', '<F10>', function() require('dap').step_over() end)
+keymap.set('n', '<F11>', function() require('dap').step_into() end)
+keymap.set('n', '<F12>', function() require('dap').step_out() end)
+keymap.set('n', '<Leader>b', function() require('dap').toggle_breakpoint() end)
+keymap.set('n', '<Leader>B', function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end)
+
+-- Other Keymaps
 local opts = { silent = true }
 
 -- Nvim Tree Toggle
@@ -282,7 +337,7 @@ vim.keymap.set('n', '<Leader>fc', "<cmd>Telescope git_commits<cr>", opts)
 vim.keymap.set('n', '<Leader>gf', "<cmd>Telescope git_files<cr>", opts)
 
 -- Ensure fugitive is loaded
-vim.cmd [[packadd vim-fugitive]]
+--vim.cmd [[packadd vim-fugitive]]
 
 -- Git
 vim.keymap.set('n', '<Leader>gs', ':G<CR>', opts)
@@ -290,8 +345,13 @@ vim.keymap.set('n', '<Leader>gc', ':Git commit<CR>', opts)
 vim.keymap.set('n', '<Leader>gp', ':Git push<CR>', opts)
 vim.keymap.set('n', '<Leader>gl', ':Git log<CR>', opts)
 
--- C++
-vim.keymap.set('n', '<Leader>rc', ":w<CR>:!g++ % -o %:r && ./%:r<CR>", opts)
-
 -- Lua
 vim.keymap.set('n', '<Leader>rl', ":w<CR>:!lua %<CR>", opts)
+
+-- CMake
+-- Configure project (runs cmake configure)
+vim.api.nvim_set_keymap('n', '<leader>cc', '<cmd>CMakeConfigure<CR>', { noremap = true, silent = true })
+-- Build project (uses CMake to invoke g++)
+vim.api.nvim_set_keymap('n', '<leader>cb', '<cmd>CMakeBuild<CR>', { noremap = true, silent = true })
+-- Run target executable
+vim.api.nvim_set_keymap('n', '<leader>cr', '<cmd>CMakeRun<CR>', { noremap = true, silent = true })
