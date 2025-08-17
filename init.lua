@@ -594,25 +594,37 @@ keymap.set('n', '<Leader>gl', ':Git log<CR>', opts)
 -----------------------
 -- Lua / Build Commands
 -----------------------
+-- Run the current file in Lua
 keymap.set('n', '<Leader>rl', ':w<CR>:!lua %<CR>', opts)
 
+-- CMake Configure
 keymap.set('n', '<Leader>cc', function()
   run_in_float(
     "cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && ln -sf build/compile_commands.json compile_commands.json")
 end, opts)
 
-keymap.set('n', '<Leader>cb', function()
-  run_in_float("cmake --build build -j$(nproc)")
+-- CMake Build Debug
+keymap.set('n', '<Leader>cbd', function()
+  run_in_float("cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
 end, opts)
 
+-- CMake Build Release
+keymap.set('n', '<Leader>cbr', function()
+  run_in_float("cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
+end, opts)
+
+-- Cmake Clean 
 keymap.set('n', '<Leader>cl', function()
   run_in_float("rm -rf build out compile_commands.json")
 end, opts)
 
+-- Cmake Run 
 keymap.set('n', '<Leader>cr', function()
   local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
   run_in_float(string.format("./build/%s", project_name))
 end, opts)
+
+
 
 -----------------------
 -- Tests (DAP / CTest)
