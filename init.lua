@@ -11,6 +11,7 @@ vim.g.maplocalleader = " "
 ----------
 -- Options
 ----------
+
 vim.o.directory = vim.fn.stdpath("state") .. "/swap//"
 vim.o.mouse = "a"
 vim.wo.number = true
@@ -51,6 +52,7 @@ end
 ----------
 -- Plugins
 ----------
+
 require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
 
@@ -108,6 +110,7 @@ require('packer').startup(function(use)
       require("nvim-autopairs").setup {}
     end
   }
+
   -- GruvBox Material Soft
   use {
     "sainnhe/gruvbox-material",
@@ -177,6 +180,7 @@ end)
 -------------------
 -- Helper Functions
 -------------------
+
 -- Auto Reload
 local group_auto_reload = vim.api.nvim_create_augroup("AutoReload", { clear = true })
 vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
