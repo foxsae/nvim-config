@@ -8,7 +8,9 @@ package.cpath = package.cpath .. ";/home/foxsae/.luarocks/lib/lua/5.1/?.so"
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Basic Options
+----------
+-- Options
+----------
 vim.o.directory = vim.fn.stdpath("state") .. "/swap//"
 vim.o.mouse = "a"
 vim.wo.number = true
@@ -28,22 +30,14 @@ vim.o.undodir = vim.fn.stdpath('data') .. '/undo//'
 vim.o.autoread = true
 vim.o.clipboard = "unnamedplus"
 
--- Auto Reload & Format
-local group_auto_reload = vim.api.nvim_create_augroup("AutoReload", { clear = true })
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
-  group = group_auto_reload,
-  pattern = "*",
-  command = "checktime"
-})
+-- Neovide Options
+vim.o.guifont = "Fira Code:h15"
+vim.g.neovide_cursor_vfx_mode = "railgun"
+vim.g.neovide_opacity = 0.9
+vim.g.neovide_floating_blur_amount_x = 2.0
+vim.g.neovide_floating_blur_amount_y = 2.0
+vim.g.neovide_fullscreen = true
 
-local group_format = vim.api.nvim_create_augroup("FormatLuaOnSave", { clear = true })
-vim.api.nvim_create_autocmd("BufWritePre", {
-  group = group_format,
-  pattern = "*.lua",
-  callback = function()
-    pcall(vim.lsp.buf.format, { async = false })
-  end
-})
 
 -- Bootstrap Packer
 local fn = vim.fn
@@ -54,7 +48,9 @@ if fn.empty(fn.glob(install_path)) > 0 then
   vim.cmd [[packadd packer.nvim]]
 end
 
+----------
 -- Plugins
+----------
 require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
 
@@ -103,10 +99,8 @@ require('packer').startup(function(use)
   use 'kyazdani42/nvim-tree.lua'
   use 'kyazdani42/nvim-web-devicons'
   use 'nvim-lualine/lualine.nvim'
-  use 'morhetz/gruvbox'
-  use 'echasnovski/mini.icons'
 
-  -- Optional Extras
+  -- Auto pair brackets
   use {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -142,7 +136,6 @@ require('packer').startup(function(use)
   }
 
   use 'theHamsta/nvim-dap-virtual-text'
-  -- Start Section for ToggleTerm Overseer CMake-Tools
 
   -- Toggleterm
   use {
@@ -181,6 +174,17 @@ require('packer').startup(function(use)
   }
 end)
 
+-------------------
+-- Helper Functions
+-------------------
+-- Auto Reload
+local group_auto_reload = vim.api.nvim_create_augroup("AutoReload", { clear = true })
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+  group = group_auto_reload,
+  pattern = "*",
+  command = "checktime"
+})
+
 -- Persistent test terminal
 local Terminal = require('toggleterm.terminal').Terminal
 
@@ -214,19 +218,10 @@ local test_term = Terminal:new({
 
 -- Function to run tests manually in the persistent terminal
 local function run_tests()
-  -- Show terminal if hidden
   test_term:toggle()
-  -- Send the test command
   test_term:send("ctest --test-dir build --output-on-failure\n", false)
 end
 
--- Neovide Settings
-vim.o.guifont = "Fira Code:h15"
-vim.g.neovide_cursor_vfx_mode = "railgun"
-vim.g.neovide_opacity = 0.9
-vim.g.neovide_floating_blur_amount_x = 2.0
-vim.g.neovide_floating_blur_amount_y = 2.0
-vim.g.neovide_fullscreen = true
 
 -- LSP Setup
 local ok_lsp, lspconfig = pcall(require, "lspconfig")
@@ -254,6 +249,7 @@ if ok_lsp then
     }
   }
 
+  -- Autoformt on save
   vim.api.nvim_create_autocmd("BufWritePre", {
     pattern = { "*.c", "*.cpp", "*.h", "*.hpp", "*.lua" },
     callback = function()
@@ -282,7 +278,6 @@ if ok_ts then
   }
   ts_configs.setup(config)
 end
-
 
 -- Gitsigns Setup
 local ok_gs, gitsigns = pcall(require, "gitsigns")
@@ -389,6 +384,9 @@ if ok_lualine then
   }
 end
 
+----------
+-- Keymaps
+----------
 -- Debugging Keymaps
 local keymap = vim.keymap
 keymap.set('n', '<F5>', function() require('dap').continue() end)
