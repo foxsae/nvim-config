@@ -266,7 +266,12 @@ require("packer").startup(function(use)
       if ok then dapui.setup() end
     end
   }
-  use("theHamsta/nvim-dap-virtual-text")
+  use({
+    "theHamsta/nvim-dap-virtual-text",
+    config = function()
+      require("nvim-dap-virtual-text").setup({})
+    end,
+  })
 
   -------------------
   -- Terminal
@@ -387,6 +392,8 @@ if ok_ts and ts_configs then
     autotag = { enable = false },
     sync_install = false,
     auto_install = false,
+    modules = {},
+    ignore_install = {},
   })
 end
 
