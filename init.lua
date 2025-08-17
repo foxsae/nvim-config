@@ -272,6 +272,30 @@ require("packer").startup(function(use)
       require("nvim-dap-virtual-text").setup({})
     end,
   })
+  local ok, dap = pcall(require, "dap")
+  if ok then
+    dap.adapters.lldb = {
+      type = "executable",
+      command = "lldb-dap",
+      name = "lldb"
+    }
+    dap.configurations.cpp = {
+      {
+        name = "Launch file",
+        type = "lldb",
+        request = "launch",
+        program = function()
+          local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+          return vim.fn.getcwd() .. "/build/" .. project_name
+        end,
+        cwd = '${workspaceFolder}',
+        stopOnEntry = false,
+        args = {},
+        runInTerminal = false,
+      },
+    }
+    dap.configurations.c = dap.configurations.cpp
+  end
 
   -------------------
   -- Terminal
@@ -606,13 +630,13 @@ end, opts)
 -- CMake Build Debug
 keymap.set('n', '<Leader>cbd', function()
   run_in_float(
-  "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
+    "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
 end, opts)
 
 -- CMake Build Release
 keymap.set('n', '<Leader>cbr', function()
   run_in_float(
-  "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
+    "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
 end, opts)
 
 -- Cmake Clean
