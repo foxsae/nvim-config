@@ -668,3 +668,12 @@ keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv", opts)
 keymap.set('v', '<A-j>', ":m '>+1<CR>gv=gv", opts)
 keymap.set('v', 'J', ":m '>+1<CR>gv=gv", opts)
 keymap.set('v', 'K', ":m '<-2<CR>gv=gv", opts)
+
+-- Navigate hunks
+vim.keymap.set('n', ']h', function() gitsigns.nav_hunk({ next = true }) end, opts)
+vim.keymap.set('n', '[h', function() gitsigns.nav_hunk({ next = false }) end, opts)
+
+-- Optional: stage/reset hunks
+vim.keymap.set('n', '<leader>hs', gitsigns.stage_hunk, opts)
+vim.keymap.set('n', '<leader>hu', gitsigns.reset_hunk, opts)
+vim.keymap.set('n', '<leader>hp', gitsigns.preview_hunk, opts)
