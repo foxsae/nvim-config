@@ -605,26 +605,26 @@ end, opts)
 
 -- CMake Build Debug
 keymap.set('n', '<Leader>cbd', function()
-  run_in_float("cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
+  run_in_float(
+  "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
 end, opts)
 
 -- CMake Build Release
 keymap.set('n', '<Leader>cbr', function()
-  run_in_float("cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
+  run_in_float(
+  "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build -j$(nproc) && ln -sf build/compile_commands.json compile_commands.json")
 end, opts)
 
--- Cmake Clean 
+-- Cmake Clean
 keymap.set('n', '<Leader>cl', function()
   run_in_float("rm -rf build out compile_commands.json")
 end, opts)
 
--- Cmake Run 
+-- Cmake Run
 keymap.set('n', '<Leader>cr', function()
   local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
   run_in_float(string.format("./build/%s", project_name))
 end, opts)
-
-
 
 -----------------------
 -- Tests (DAP / CTest)
