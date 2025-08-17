@@ -448,3 +448,13 @@ vim.keymap.set('n', '<Leader>tt', run_tests, opts) -- run all tests
 vim.keymap.set('n', '<Leader>tr', function()
   test_term:toggle()
 end, opts) -- just show/hide the terminal
+
+-- Move current line / selected lines up and down
+vim.keymap.set("n", "<A-k>", ":m .-2<CR>==", opts)
+vim.keymap.set("n", "<A-j>", ":m .+1<CR>==", opts)
+vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv", opts)
+vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", opts)
+
+-- Move selected lines up/down in Visual mode
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
