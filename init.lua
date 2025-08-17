@@ -107,8 +107,13 @@ require('packer').startup(function(use)
   use 'echasnovski/mini.icons'
 
   -- Optional Extras
-  use 'windwp/nvim-autopairs'
-
+  use {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = function()
+      require("nvim-autopairs").setup {}
+    end
+  }
   -- GruvBox Material Soft
   use {
     "sainnhe/gruvbox-material",
@@ -165,13 +170,21 @@ require('packer').startup(function(use)
     "stevearc/overseer.nvim",
     config = function()
       ---@diagnostic disable-next-line: undefined-field
-      require("overseer").setup()
+      require("overseer").setup({
+        templates = { "builtin" },
+        task_list = {
+          direction = "bottom",
+          min_height = 15,
+        },
+      })
     end
   }
 end)
 
--- Helper function to run a command in a new floating terminal
+-- Persistent test terminal
 local Terminal = require('toggleterm.terminal').Terminal
+
+-- Helper function to run a command in a new floating terminal
 local function run_in_float(cmd)
   local float_term = Terminal:new({
     cmd = cmd,
@@ -183,6 +196,30 @@ local function run_in_float(cmd)
   float_term:toggle()
 end
 
+-- Single terminal for tests
+local test_term = Terminal:new({
+  cmd = "ctest --test-dir build --output-on-failure",
+  direction = "horizontal", -- or "vertical"
+  close_on_exit = false,
+  hidden = true,            -- start hidden, shown on first run
+  start_in_insert = false,
+  on_exit = function(_, exit_code, _)
+    if exit_code == 0 then
+      vim.notify("All tests passed ✅", vim.log.levels.INFO)
+    else
+      vim.notify("Tests failed ❌", vim.log.levels.ERROR)
+    end
+  end,
+})
+
+-- Function to run tests manually in the persistent terminal
+local function run_tests()
+  -- Show terminal if hidden
+  test_term:toggle()
+  -- Send the test command
+  test_term:send("ctest --test-dir build --output-on-failure\n", false)
+end
+
 -- Neovide Settings
 vim.o.guifont = "Fira Code:h15"
 vim.g.neovide_cursor_vfx_mode = "railgun"
@@ -191,8 +228,7 @@ vim.g.neovide_floating_blur_amount_x = 2.0
 vim.g.neovide_floating_blur_amount_y = 2.0
 vim.g.neovide_fullscreen = true
 
--- Lua LSP Setup
-
+-- LSP Setup
 local ok_lsp, lspconfig = pcall(require, "lspconfig")
 if ok_lsp then
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
@@ -217,6 +253,13 @@ if ok_lsp then
       }
     }
   }
+
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = { "*.c", "*.cpp", "*.h", "*.hpp", "*.lua" },
+    callback = function()
+      vim.lsp.buf.format({ async = false })
+    end,
+  })
 end
 
 -- Treesitter Setup
@@ -398,3 +441,10 @@ vim.keymap.set('n', '<Leader>cr', function()
   local exe_path = string.format("./build/%s", project_name)
   run_in_float(exe_path)
 end, opts)
+
+-- Keybindings for manual test control
+vim.keymap.set('n', '<Leader>tt', run_tests, opts) -- run all tests
+
+vim.keymap.set('n', '<Leader>tr', function()
+  test_term:toggle()
+end, opts) -- just show/hide the terminal
