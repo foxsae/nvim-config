@@ -362,6 +362,12 @@ local function run_tests()
   test_term:send("ctest --test-dir build --output-on-failure\n", false)
 end
 
+local function run_one()
+  local test_file = vim.fn.expand('%:t:r') -- get current file name without extension
+  test_term:toggle()
+  test_term:send(string.format("ctest --test-dir build --output-on-failure -R %s\n", test_file), false)
+end
+
 local function run_in_float(cmd)
   Terminal:new({ cmd = cmd, direction = "float", close_on_exit = false, start_in_insert = true }):toggle()
 end
@@ -381,6 +387,12 @@ if ok_lsp then
     capabilities = capabilities,
   })
 
+  -- Bash LSP
+  lspconfig.bashls.setup({
+    capabilities = capabilities,
+    filetypes = { "sh" }, -- shell scripts
+  })
+
   -- Lua LSP
   lspconfig.lua_ls.setup({
     capabilities = capabilities,
@@ -397,7 +409,7 @@ if ok_lsp then
   -- Autoformat on save
   vim.api.nvim_create_autocmd("BufWritePre", {
     group = vim.api.nvim_create_augroup("AutoFormatOnSave", { clear = true }),
-    pattern = { "*.c", "*.cpp", "*.h", "*.hpp", "*.lua" },
+    pattern = { "*.c", "*.cpp", "*.h", "*.hpp", "*.lua", "*.sh" },
     callback = function() vim.lsp.buf.format({ async = false }) end,
   })
 end
@@ -655,6 +667,7 @@ end, opts)
 -----------------------
 keymap.set('n', '<Leader>tt', run_tests, opts)                         -- run all tests
 keymap.set('n', '<Leader>tr', function() test_term:toggle() end, opts) -- show/hide terminal
+keymap.set('n', '<Leader>t1', run_one, opts)
 
 -----------------------
 -- Move Lines
